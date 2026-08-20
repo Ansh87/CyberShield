@@ -158,6 +158,15 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
 .samplebar button{font-size:11px;padding:5px 9px;border:1px dashed var(--line-2);border-radius:7px;color:var(--ink-2);font-family:var(--mono)}
 .samplebar button:hover{border-color:var(--cyan);color:var(--cyan)}
 .sim-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber);border-radius:7px;padding:5px 9px;font-weight:600}
+.demo-hint{display:flex;align-items:flex-start;gap:9px;background:var(--cyan-dim);border:1px solid var(--cyan);border-radius:11px;padding:11px 14px;margin-bottom:14px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.demo-hint .dh-ico{flex:0 0 auto;font-size:14px;line-height:1.3}
+.demo-hint b{color:var(--cyan)}
+.cve-list{display:flex;flex-direction:column;gap:9px}
+.cve-row{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.cve-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.cve-badge{font-family:var(--mono);font-size:9.5px;font-weight:700;border:1px solid;border-radius:5px;padding:2px 7px;white-space:nowrap}
+.cve-verdict{font-size:12px;font-weight:600;line-height:1.4;margin-bottom:3px}
+.cve-meta{font-size:11px;color:var(--ink-3);font-family:var(--mono)}
 
 /* ---------- Privacy note ---------- */
 .privacy-note{font-size:11.5px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 12px;line-height:1.5}
@@ -563,7 +572,6 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
       <section class="view active" id="view-assess">
 
         <div class="hero" id="hero">
-          <div class="hero-badge">◆ Simulation Mode · Prototype</div>
           <h1>CyberShield AI</h1>
           <div class="hero-sub">Cyber-Physical Threat Intelligence</div>
           <p class="hero-msg">CyberShield AI detects cyber threats that can become physical-world incidents. It analyzes computers, apps, AI agents, drones, vehicles, factories, navigation systems, and smart-city infrastructure, then predicts impact and recommends safe response actions for human review.</p>
@@ -580,6 +588,11 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
         </div>
 
         <div class="stepper" id="stepper"></div>
+
+        <div class="demo-hint">
+          <span class="dh-ico">💡</span>
+          <span>Select an asset and load a sample, or open the <b>Scenario Library</b>, to see how CyberShield maps a cyber threat to physical-world safety risk.</span>
+        </div>
 
         <div class="card" style="margin-bottom:14px">
           <h3>Asset type</h3>
@@ -1137,7 +1150,7 @@ const FRAMEWORKS = [
 /* ============================================================
    State
    ============================================================ */
-const state = { asset:null, assetKey:null, threats:[], score:null, scanned:false, cve:null, lastLog:'', kevIds:null, kevLoaded:false, kevMode:null, tuning:null };
+const state = { asset:null, assetKey:null, threats:[], score:null, scanned:false, cve:null, cves:[], lastLog:'', kevIds:null, kevLoaded:false, kevMode:null, tuning:null };
 
 /* ============================================================
    Rendering
@@ -1201,21 +1214,23 @@ function applyTuning(){
   $('#tvAuto').textContent=state.tuning.auto;
   $('#tvExp').textContent=state.tuning.exp;
   $('#tvSafe').textContent=state.tuning.safe;
+  renderProfile(); // keep the Risk Profile chips in sync with tuning
   // live-update score + downstream views if a scan already ran
   if(state.scanned){computeScore();renderThreats();renderImpact();renderRemediation();renderReport();}
 }
 
 function renderProfile(){
   const a=state.asset;if(!a)return;
-  $('#profileName').textContent='· '+a.name;
-  const expL=['—','Minimal','Low','Moderate','High','Internet-facing'][a.exposure];
+  const p=getEffectiveProfile();
+  $('#profileName').textContent='· '+p.name+(p.tuned?' (tuned)':'');
+  const expL=['—','Minimal','Low','Moderate','High','Internet-facing'][p.exposure];
   const f=[
-    {k:"Autonomy level",v:"L"+a.auto+" / 5",p:a.auto/5},
-    {k:"Safety criticality",v:a.safety+" / 10",p:a.safety/10},
-    {k:"Exposure",v:expL,p:a.exposure/5},
-    {k:"Physical risk",v:a.physical?"Yes":"Digital only",p:a.physical?1:0.15},
+    {k:"Autonomy level",v:"L"+p.auto+" / 5",pr:p.auto/5},
+    {k:"Safety criticality",v:p.safety+" / 10",pr:p.safety/10},
+    {k:"Exposure",v:expL,pr:p.exposure/5},
+    {k:"Physical risk",v:p.physical?"Yes":"Digital only",pr:p.physical?1:0.15},
   ];
-  $('#profileStrip').innerHTML=f.map(x=>`<div class="pchip"><span class="k">${x.k}</span><span class="v">${x.v}</span><span class="bar"><i style="width:${Math.round(x.p*100)}%"></i></span></div>`).join('');
+  $('#profileStrip').innerHTML=f.map(x=>`<div class="pchip"><span class="k">${x.k}</span><span class="v">${x.v}</span><span class="bar"><i style="width:${Math.round(x.pr*100)}%"></i></span></div>`).join('');
 }
 
 function renderSamples(){
@@ -1326,23 +1341,24 @@ function renderThreats(){
     </div>`;
   });
 
-  // ----- CVE Vulnerability Intelligence (#3) -----
-  if(state.cve){
-    const cv=state.cve;
-    const knownLabel=cv.known==='yes'?'Yes':cv.known==='no'?'No':'Unknown';
-    const knownCol=cv.known==='yes'?'var(--red)':cv.known==='no'?'var(--ink-2)':'var(--amber)';
-    const priority=cv.known==='yes'?'Patch immediately — known exploited in the wild.':'Investigate and follow vendor guidance.';
-    const verdict=cv.known==='yes'?'Known exploited in the wild — prioritize remediation.':'Not found in the loaded KEV data — verify with vendor and official advisories.';
-    html+=`<div class="card" style="margin-top:16px;border-left:3px solid ${knownCol}">
+  // ----- CVE Vulnerability Intelligence (all CVEs found) -----
+  if(state.cves && state.cves.length){
+    const rowFor=(cv)=>{
+      const knownLabel=cv.known==='yes'?'Known exploited':cv.known==='no'?'Not in KEV':'Unknown';
+      const knownCol=cv.known==='yes'?'var(--red)':cv.known==='no'?'var(--ink-2)':'var(--amber)';
+      const verdict=cv.known==='yes'?'Known exploited in the wild — prioritize remediation.':cv.known==='no'?'Not found in the loaded KEV data — verify with vendor and official advisories.':'KEV data unavailable — verify with vendor and official advisories.';
+      const priority=cv.known==='yes'?'Patch immediately.':'Investigate and follow vendor guidance.';
+      return `<div class="cve-row" style="border-left:3px solid ${knownCol}">
+        <div class="cve-top"><span class="v mono" style="font-weight:700">${cv.id}</span><span class="cve-badge" style="color:${knownCol};border-color:${knownCol}">${knownLabel}</span></div>
+        <div class="cve-verdict" style="color:${knownCol}">${verdict}</div>
+        <div class="cve-meta">Source: ${cv.source} · Priority: ${priority}</div>
+      </div>`;
+    };
+    const n=state.cves.length;
+    html+=`<div class="card" style="margin-top:16px">
       <h3>🛡 Vulnerability Intelligence</h3>
-      <div class="sub">Cross-referenced with the CISA Known Exploited Vulnerabilities catalog.</div>
-      <div class="kv" style="margin-bottom:10px">
-        <div><span class="k">CVE ID</span><span class="v mono">${cv.id}</span></div>
-        <div><span class="k">Found in telemetry</span><span class="v">Yes</span></div>
-        <div><span class="k">Known exploited</span><span class="v" style="color:${knownCol}">${knownLabel}</span></div>
-        <div><span class="k">Source</span><span class="v">${cv.source}</span></div>
-      </div>
-      <div style="font-size:12.5px;color:var(--ink-2);line-height:1.5"><b style="color:${knownCol}">${verdict}</b><br>Priority: ${priority}</div>
+      <div class="sub">${n} CVE${n>1?'s':''} found in telemetry, cross-referenced with the CISA Known Exploited Vulnerabilities catalog.</div>
+      <div class="cve-list">${state.cves.map(rowFor).join('')}</div>
     </div>`;
   }
 
@@ -1412,17 +1428,22 @@ function renderThreats(){
 
 /* ---------- CVE detection against KEV data (#3) ---------- */
 function detectCVE(log){
-  state.cve=null;
-  const m=(log||'').match(/CVE-\d{4}-\d{4,7}/i);
-  if(!m) return;
-  const id=m[0].toUpperCase();
-  // check against whatever KEV data is currently loaded (live or sample)
-  const inKev=(state.kevIds&&state.kevIds.has(id));
-  state.cve={
-    id,
-    known: state.kevLoaded ? (inKev?'yes':'no') : 'unknown',
-    source: inKev ? (state.kevMode==='live'?'CISA KEV (live)':'CISA KEV (sample)') : (state.kevLoaded?'Not in loaded KEV data':'KEV data not yet loaded')
-  };
+  state.cve=null; state.cves=[];
+  const all=[...(log||'').matchAll(/CVE-\d{4}-\d{4,7}/gi)];
+  if(all.length===0) return;
+  const seen=new Set();
+  all.forEach(mm=>{
+    const id=mm[0].toUpperCase();
+    if(seen.has(id))return; seen.add(id);
+    const inKev=(state.kevIds&&state.kevIds.has(id));
+    state.cves.push({
+      id,
+      known: state.kevLoaded ? (inKev?'yes':'no') : 'unknown',
+      source: inKev ? (state.kevMode==='live'?'CISA KEV (live)':'CISA KEV (sample)') : (state.kevLoaded?'Not in loaded KEV data':'KEV data not yet loaded')
+    });
+  });
+  // keep single-CVE reference for the report/JSON (first / highest-priority)
+  state.cve = state.cves.find(c=>c.known==='yes') || state.cves[0] || null;
 }
 
 /* ---------- Cyber-physical score ---------- */
@@ -1592,7 +1613,8 @@ function renderReport(){
   const ts=new Date().toLocaleString();
   const id="CS-"+Date.now().toString(36).toUpperCase().slice(-6);
   const topThreat=state.threats[0];
-  const cveLine=state.cve?`<div><span class="k">CVE intel</span><span class="v" style="font-size:13px">${state.cve.id} · ${state.cve.known==='yes'?'known exploited':state.cve.known==='no'?'not in KEV':'unknown'}</span></div>`:'';
+  const cveCount=(state.cves&&state.cves.length)||0;
+  const cveLine=state.cve?`<div><span class="k">CVE intel</span><span class="v" style="font-size:13px">${state.cve.id}${cveCount>1?' +'+(cveCount-1)+' more':''} · ${state.cve.known==='yes'?'known exploited':state.cve.known==='no'?'not in KEV':'unknown'}</span></div>`:'';
   let html=`<div class="report"><div class="rhead"><h3>Incident summary — ${p.name}</h3><div class="sub mono" style="margin-top:4px">${id} · ${ts}</div></div><div class="rbody">
     <div class="kv">
       <div><span class="k">Risk score</span><span class="v" style="color:${s.gcol}">${s.score} / 100 · ${s.grade}</span></div>
@@ -1647,9 +1669,9 @@ function downloadJsonReport(id,ts){
       name:t.name, key:t.key, severity:t.sev, confidence:t.conf,
       matchedSignals:t.terms||[], frameworks:t.frameworks, unclassified:!!t.unclassified
     })),
-    cveIntelligence:state.cve?{
-      cveId:state.cve.id, knownExploited:state.cve.known, source:state.cve.source
-    }:null,
+    cveIntelligence:(state.cves&&state.cves.length)?state.cves.map(c=>({
+      cveId:c.id, knownExploited:c.known, source:c.source
+    })):null,
     cyberPhysicalRiskScore:{score:s.score, grade:s.grade},
     beforeRemediationScore:beforeAfter.before,
     afterRecommendedControlsScore:beforeAfter.after,
@@ -1879,7 +1901,7 @@ $('#scanBtn').onclick=runScan;
   const el=$(id);if(el)el.addEventListener('input',applyTuning);
 });
 const tReset=$('#tuningReset');
-if(tReset)tReset.onclick=()=>{state.tuning=null;syncTuning();if(state.scanned){computeScore();renderThreats();renderImpact();renderRemediation();renderReport();}toast('Tuning reset to asset defaults');};
+if(tReset)tReset.onclick=()=>{state.tuning=null;syncTuning();renderProfile();if(state.scanned){computeScore();renderThreats();renderImpact();renderRemediation();renderReport();}toast('Tuning reset to asset defaults');};
 $('#heroStart').onclick=()=>{
   $('#assetGrid').scrollIntoView({behavior:'smooth',block:'start'});
 };
