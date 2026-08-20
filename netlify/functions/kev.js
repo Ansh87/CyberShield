@@ -22,7 +22,7 @@ export const handler = async () => {
 
     const res = await fetch(UPSTREAM, {
       signal: controller.signal,
-      headers: { "User-Agent": "CyberShield-AI-POC/1.0" },
+      headers: { "User-Agent": "CyberShield-AI-Prototype/1.0" },
     });
     clearTimeout(timeout);
 
@@ -36,7 +36,7 @@ export const handler = async () => {
 
     const data = await res.json();
 
-    // Trim to the most recent entries to keep the payload small.
+    // Full catalog for lookup; trimmed list for display.
     const vulns = Array.isArray(data.vulnerabilities) ? data.vulnerabilities : [];
     const recent = vulns.slice(-40).reverse().map((v) => ({
       cveID: v.cveID,
@@ -45,6 +45,10 @@ export const handler = async () => {
       vulnerabilityName: v.vulnerabilityName,
       dateAdded: v.dateAdded,
     }));
+
+    // Full list of every CVE ID in the catalog — used for CVE matching in the app
+    // (display stays trimmed, matching uses the whole catalog).
+    const allCveIds = vulns.map((v) => v.cveID);
 
     return {
       statusCode: 200,
@@ -55,6 +59,7 @@ export const handler = async () => {
         catalogVersion: data.catalogVersion || null,
         dateReleased: data.dateReleased || null,
         vulnerabilities: recent,
+        allCveIds: allCveIds,
       }),
     };
   } catch (err) {

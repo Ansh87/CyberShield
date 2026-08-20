@@ -1202,7 +1202,7 @@ function applyTuning(){
   $('#tvExp').textContent=state.tuning.exp;
   $('#tvSafe').textContent=state.tuning.safe;
   // live-update score + downstream views if a scan already ran
-  if(state.scanned){computeScore();renderImpact();renderRemediation();renderReport();}
+  if(state.scanned){computeScore();renderThreats();renderImpact();renderRemediation();renderReport();}
 }
 
 function renderProfile(){
@@ -1372,23 +1372,28 @@ function renderThreats(){
   // ----- Explain Detection panel (#2) -----
   const primary=state.threats[0];
   if(primary && !primary.unclassified){
+    const p=getEffectiveProfile();
     const termList=primary.terms&&primary.terms.length?primary.terms.map(x=>`<span class="sig">${x}</span>`).join(''):'<span class="sig">pattern heuristics</span>';
-    const expL=['—','minimal','low','moderate','high','internet-facing'][a.exposure];
-    const explanation=`CyberShield classified this as <b>${primary.name}</b> because the telemetry matched ${primary.matches} known signal${primary.matches>1?'s':''} for this threat class. Because the selected asset is a <b>${a.name}</b> with autonomy level L${a.auto} and ${a.physical?'physical-safety criticality':'digital-only exposure'}, the cyber-physical risk score was ${a.physical?'increased':'weighted toward data-impact'}.`;
+    const expL=['—','minimal','low','moderate','high','internet-facing'][p.exposure];
+    const tunedNote=p.tuned?' (adjusted via risk tuning)':'';
+    const explanation=`CyberShield classified this as <b>${primary.name}</b> because the telemetry matched ${primary.matches} known signal${primary.matches>1?'s':''} for this threat class. Because the assessed profile is a <b>${p.name}</b> with autonomy level L${p.auto}, ${p.physical?'physical-safety criticality':'digital-only exposure'}, and human oversight set to <b>${p.oversightLabel}</b>, the cyber-physical risk score was ${p.physical?'weighted toward physical-world impact':'weighted toward data-impact'}${tunedNote}.`;
     html+=`<div class="card explain-card" style="margin-top:16px">
       <button class="explain-toggle" id="explainToggle"><span>Why CyberShield classified this threat</span><span class="ex-chev" id="exChev">▾</span></button>
       <div class="explain-body" id="explainBody">
         <div class="explain-grid">
           <div><span class="k">Matched signals</span><div class="sigs">${termList}</div></div>
-          <div><span class="k">Asset type</span><span class="v">${a.name}</span></div>
-          <div><span class="k">Autonomy level</span><span class="v">L${a.auto} / 5</span></div>
-          <div><span class="k">Exposure level</span><span class="v">${expL}</span></div>
-          <div><span class="k">Physical-safety relevance</span><span class="v">${a.physical?'Yes':'Digital only'}</span></div>
+          <div><span class="k">Asset type</span><span class="v">${p.name}</span></div>
+          <div><span class="k">Autonomy level</span><span class="v">L${p.auto} / 5${p.tuned?' *':''}</span></div>
+          <div><span class="k">Exposure level</span><span class="v">${expL}${p.tuned?' *':''}</span></div>
+          <div><span class="k">Safety criticality</span><span class="v">${p.safety} / 10${p.tuned?' *':''}</span></div>
+          <div><span class="k">Human oversight</span><span class="v" style="font-size:12px">${p.oversightLabel}</span></div>
+          <div><span class="k">Physical-safety relevance</span><span class="v">${p.physical?'Yes':'Digital only'}</span></div>
           <div><span class="k">Framework mapping</span><span class="v" style="font-size:12px">${primary.frameworks.join(', ')}</span></div>
           <div><span class="k">Final classification</span><span class="v">${primary.name}</span></div>
           <div><span class="k">Confidence</span><span class="v">${primary.conf}% (deterministic)</span></div>
         </div>
         <p class="explain-text">${explanation}</p>
+        ${p.tuned?'<p style="font-size:11px;color:var(--ink-3);margin:8px 0 0">* value adjusted via Advanced Risk Tuning</p>':''}
       </div>
     </div>`;
   }
@@ -1421,27 +1426,39 @@ function detectCVE(log){
 }
 
 /* ---------- Cyber-physical score ---------- */
-function computeScore(){
+/* ---------- Single source of truth for asset profile + tuning overrides ---------- */
+function getEffectiveProfile(){
   const a=state.asset;
+  if(!a) return null;
+  const tn=state.tuning||{};
+  const oversight=tn.oversight||'none';
+  const oversightLabel={none:'None (fully autonomous)',review:'Human review',manual:'Manual override available'}[oversight];
+  return {
+    name:a.name,
+    auto:(tn.auto!=null?tn.auto:a.auto),
+    exposure:(tn.exp!=null?tn.exp:a.exposure),
+    safety:(tn.safe!=null?tn.safe:a.safety),
+    physical:a.physical,
+    oversight, oversightLabel,
+    tuned:!!state.tuning
+  };
+}
+
+function computeScore(){
+  const p=getEffectiveProfile();
   const maxSev=Math.max(...state.threats.map(t=>t.sev));
   const maxPhys=Math.max(...state.threats.map(t=>t.physical));
-  // tuning overrides (from Advanced Risk Tuning) fall back to asset defaults
-  const tn=state.tuning||{};
-  const auto=(tn.auto!=null?tn.auto:a.auto);
-  const exposure=(tn.exp!=null?tn.exp:a.exposure);
-  const safety=(tn.safe!=null?tn.safe:a.safety);
-  const oversight=tn.oversight||'none';
   const factors={
     severity:maxSev/10,
-    criticality:safety/10,
-    autonomy:auto/5,
-    physical:a.physical?maxPhys:0.15,
-    exposure:exposure/5,
+    criticality:p.safety/10,
+    autonomy:p.auto/5,
+    physical:p.physical?maxPhys:0.15,
+    exposure:p.exposure/5,
   };
   const w={severity:0.25,criticality:0.22,autonomy:0.15,physical:0.28,exposure:0.10};
   let raw=0;Object.keys(w).forEach(k=>raw+=factors[k]*w[k]);
   // human oversight reduces effective risk — a manual override cuts more than review
-  const oversightMult=oversight==='manual'?0.82:oversight==='review'?0.91:1.0;
+  const oversightMult=p.oversight==='manual'?0.82:p.oversight==='review'?0.91:1.0;
   let score=Math.round(raw*100*oversightMult);
   score=Math.max(0,Math.min(100,score));
   let grade,gcol;
@@ -1449,7 +1466,7 @@ function computeScore(){
   else if(score>=60){grade="HIGH";gcol="var(--grade-high)";}
   else if(score>=40){grade="MEDIUM";gcol="var(--grade-med)";}
   else{grade="LOW";gcol="var(--grade-low)";}
-  state.score={score,grade,gcol,factors,oversight};
+  state.score={score,grade,gcol,factors,oversight:p.oversight};
 }
 
 function renderImpact(){
@@ -1473,7 +1490,7 @@ function renderImpact(){
       <div class="num"><b style="color:${s.gcol}">${s.score}</b><span>/ 100</span><div class="grade" style="color:${s.gcol}">${s.grade}</div></div>
     </div>
     <div style="flex:1;width:100%">
-      <div class="sub" style="margin-bottom:12px;font-size:12.5px;color:var(--ink-2)">Cyber-physical risk for <b style="color:var(--ink)">${a.name}</b> — weighted by how a cyber threat translates to real-world consequence.</div>
+      <div class="sub" style="margin-bottom:12px;font-size:12.5px;color:var(--ink-2)">Cyber-physical risk for <b style="color:var(--ink)">${a.name}</b> — weighted by how a cyber threat translates to real-world consequence.${s.oversight&&s.oversight!=='none'?` Human oversight (<b>${s.oversight==='manual'?'manual override':'human review'}</b>) reduces the effective score.`:''}</div>
       <div class="score-factors">${facts.map(f=>`<div class="sf"><span class="lab">${f.lab}</span><span class="track"><i style="width:${Math.round(f.v*100)}%;background:${f.col}"></i></span><span class="val">${Math.round(f.v*100)}</span></div>`).join('')}</div>
     </div>
   </div></div>`;
@@ -1518,19 +1535,24 @@ function attackPath(threatKey, a){
   return lib[threatKey] || [L('Entry point','Unverified anomaly'),L('Compromised component','Under review'),L('Affected system',a.name),L('Real-world impact','Requires human analysis','impact'),L('Recommended control','Escalate to analyst','ctrl')];
 }
 
+/* ---------- Shared before/after remediation math (used by view + JSON export) ---------- */
+function computeBeforeAfter(){
+  const a=state.asset;
+  const before=state.score.score;
+  const reduction=0.46 + (state.threats.some(t=>t.unclassified)?-0.12:0);
+  let after=Math.round(before*(1-reduction));
+  after=Math.max(a.physical?28:14, after);
+  return {before, after, reduction};
+}
+
 function renderRemediation(){
   const a=state.asset;const c=$('#remediateBody');
   let allCats=new Set();
   let html='';
 
-  // Before/After remediation risk projection
-  const s=state.score;
-  const before=s.score;
-  // Estimated reduction: immediate + near-term controls cut severity/exposure contributions.
-  // Deterministic model — physical-safety criticality can't be fully removed, so a floor remains.
-  const reduction=0.46 + (state.threats.some(t=>t.unclassified)?-0.12:0);
-  let after=Math.round(before*(1-reduction));
-  after=Math.max(a.physical?28:14, after); // safety-critical assets retain residual risk
+  // Before/After remediation risk projection (shared math)
+  const ba=computeBeforeAfter();
+  const before=ba.before, after=ba.after, reduction=ba.reduction;
   const gradeOf=(v)=>v>=80?['CRITICAL','var(--grade-crit)']:v>=60?['HIGH','var(--grade-high)']:v>=40?['MEDIUM','var(--grade-med)']:['LOW','var(--grade-low)'];
   const bg=gradeOf(before), ag=gradeOf(after);
   html+=`<div class="card glow" style="margin-bottom:16px">
@@ -1566,33 +1588,84 @@ function renderRemediation(){
 
 function renderReport(){
   const a=state.asset,s=state.score;const c=$('#reportBody');
+  const p=getEffectiveProfile();
   const ts=new Date().toLocaleString();
   const id="CS-"+Date.now().toString(36).toUpperCase().slice(-6);
   const topThreat=state.threats[0];
-  let html=`<div class="report"><div class="rhead"><h3>Incident summary — ${a.name}</h3><div class="sub mono" style="margin-top:4px">${id} · ${ts}</div></div><div class="rbody">
+  const cveLine=state.cve?`<div><span class="k">CVE intel</span><span class="v" style="font-size:13px">${state.cve.id} · ${state.cve.known==='yes'?'known exploited':state.cve.known==='no'?'not in KEV':'unknown'}</span></div>`:'';
+  let html=`<div class="report"><div class="rhead"><h3>Incident summary — ${p.name}</h3><div class="sub mono" style="margin-top:4px">${id} · ${ts}</div></div><div class="rbody">
     <div class="kv">
       <div><span class="k">Risk score</span><span class="v" style="color:${s.gcol}">${s.score} / 100 · ${s.grade}</span></div>
       <div><span class="k">Threats</span><span class="v">${state.threats.length}</span></div>
-      <div><span class="k">Asset autonomy</span><span class="v">L${a.auto} / 5</span></div>
-      <div><span class="k">Physical risk</span><span class="v">${a.physical?'Yes':'Digital only'}</span></div>
+      <div><span class="k">Autonomy level</span><span class="v">L${p.auto} / 5</span></div>
+      <div><span class="k">Exposure</span><span class="v">${p.exposure} / 5</span></div>
+      <div><span class="k">Safety criticality</span><span class="v">${p.safety} / 10</span></div>
+      <div><span class="k">Human oversight</span><span class="v" style="font-size:13px">${p.oversightLabel}</span></div>
+      <div><span class="k">Physical risk</span><span class="v">${p.physical?'Yes':'Digital only'}</span></div>
+      ${cveLine}
     </div>
+    ${p.tuned?'<p style="font-size:11.5px;color:var(--amber);margin:2px 0 8px">▲ Profile values adjusted via Advanced Risk Tuning.</p>':''}
     <h4>Classified threats</h4><ul>${state.threats.map(t=>`<li><b style="color:var(--ink)">${t.name}</b> — severity ${t.sev}/10, ${t.conf}% confidence · ${t.frameworks.join(', ')}</li>`).join('')}</ul>
     <h4>Primary cyber-physical concern</h4>
-    <p>${impactProjection(topThreat.key,a).filter(p=>p.physical).map(p=>p.txt).join('; ')||impactProjection(topThreat.key,a).map(p=>p.txt).slice(0,2).join('; ')}.</p>
+    <p>${impactProjection(topThreat.key,a).filter(x=>x.physical).map(x=>x.txt).join('; ')||impactProjection(topThreat.key,a).map(x=>x.txt).slice(0,2).join('; ')}.</p>
     <h4>Immediate actions</h4><ul>${state.threats.flatMap(t=>remediationFor(t.key,a).filter(r=>r.p===1)).slice(0,5).map(r=>`<li>${r.t}</li>`).join('')}</ul>
     <h4>Framework alignment</h4><p>${[...new Set(state.threats.flatMap(t=>t.frameworks))].join(' · ')}</p>
     <h4>Disclaimer</h4><p>This report is generated from synthetic or user-provided telemetry and should be reviewed by a qualified human before action is taken. Detection is simulated. CyberShield AI does not replace professional incident response, forensic analysis, or malware removal. All findings require human verification.</p>
   </div></div>
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-    <button class="btn primary sm" onclick="window.print()">⎙ Print / save PDF</button>
+    <button class="btn primary sm" id="downloadJson">⭳ Download JSON Report</button>
+    <button class="btn sm" onclick="window.print()">⎙ Print / save PDF</button>
     <button class="btn sm" id="copyReport">⧉ Copy summary</button>
   </div>`;
   c.innerHTML=html;
   const cr=$('#copyReport');
   if(cr)cr.onclick=()=>{
-    const txt=`CyberShield AI — ${id}\nAsset: ${a.name}\nRisk: ${s.score}/100 (${s.grade})\nThreats: ${state.threats.map(t=>t.name).join(', ')}\nGenerated ${ts}`;
+    const txt=`CyberShield AI — ${id}\nAsset: ${p.name}\nRisk: ${s.score}/100 (${s.grade})\nThreats: ${state.threats.map(t=>t.name).join(', ')}\nGenerated ${ts}`;
     navigator.clipboard?.writeText(txt).then(()=>toast('Summary copied')).catch(()=>toast('Copy failed','err'));
   };
+  const dj=$('#downloadJson');
+  if(dj)dj.onclick=()=>downloadJsonReport(id,ts);
+}
+
+/* ---------- Download JSON report (local, no network) ---------- */
+function downloadJsonReport(id,ts){
+  const a=state.asset,s=state.score,p=getEffectiveProfile();
+  const top=state.threats[0];
+  const beforeAfter=computeBeforeAfter();
+  const report={
+    reportId:id,
+    generated:ts,
+    generatedISO:new Date().toISOString(),
+    assetType:p.name,
+    effectiveProfile:{
+      autonomyLevel:p.auto, exposure:p.exposure, safetyCriticality:p.safety,
+      humanOversight:p.oversightLabel, physicalSafetyRelevance:p.physical,
+      adjustedViaTuning:p.tuned
+    },
+    telemetryInput:state.lastLog||'',
+    detectedThreats:state.threats.map(t=>({
+      name:t.name, key:t.key, severity:t.sev, confidence:t.conf,
+      matchedSignals:t.terms||[], frameworks:t.frameworks, unclassified:!!t.unclassified
+    })),
+    cveIntelligence:state.cve?{
+      cveId:state.cve.id, knownExploited:state.cve.known, source:state.cve.source
+    }:null,
+    cyberPhysicalRiskScore:{score:s.score, grade:s.grade},
+    beforeRemediationScore:beforeAfter.before,
+    afterRecommendedControlsScore:beforeAfter.after,
+    attackPath: top && !top.unclassified ? attackPath(top.key,a).map(st=>({stage:st.label,value:st.val})) : [],
+    remediationSteps:state.threats.flatMap(t=>remediationFor(t.key,a).map(r=>({threat:t.name,action:r.t,priority:r.p===1?'immediate':r.p===2?'near-term':'follow-up',detail:r.d}))),
+    disclaimer:"CyberShield AI is a student-developed prototype by Ansh Saini of South Brunswick High School, New Jersey. It uses simulated threat detection and public vulnerability intelligence for educational, research, and decision-support purposes only. It does not remove malware, guarantee containment, or replace qualified cybersecurity, vendor, or incident-response guidance. All findings require human verification."
+  };
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const fname=`cybershield-report-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
+  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download=fname;document.body.appendChild(link);link.click();
+  document.body.removeChild(link);URL.revokeObjectURL(url);
+  toast('JSON report downloaded');
 }
 
 /* ============================================================
@@ -1623,8 +1696,12 @@ async function loadFeeds(initial){
           if(src.kind==='direct'){
             rows=list.slice(-14).reverse().map(v=>({cve:v.cveID,vendor:v.vendorProject,name:v.vulnerabilityName,added:v.dateAdded}));
           }
-          // capture ALL CVE IDs from the feed for cross-referencing scan telemetry
-          state.kevIds=new Set(list.map(v=>(v.cveID||'').toUpperCase()));
+          // CVE matching uses the FULL catalog: prefer proxy's allCveIds (complete),
+          // else the direct feed's full list, else the displayed rows as last resort.
+          const fullIds = Array.isArray(data.allCveIds) ? data.allCveIds
+                        : (src.kind==='direct' ? list.map(v=>v.cveID) : list.map(v=>v.cveID));
+          state.kevIds=new Set(fullIds.map(id=>(id||'').toUpperCase()));
+          state.kevCount=(data.count||fullIds.length);
           mode='live';
           break;
         }
@@ -1703,7 +1780,7 @@ function renderEval(hasRun){
   const t=$('#evalTable');if(!t)return;
   if(!hasRun){
     // idle state — show cases without results until the suite is run
-    t.innerHTML=`<thead><tr><th>Test Case</th><th>Expected Threat</th><th>Detected Threat</th><th>Result</th><th>Confidence</th><th>Matched Signals</th></tr></thead><tbody>`+
+    t.innerHTML=`<thead><tr><th>Test Case</th><th>Expected Threat</th><th>Detected Threats</th><th>Result</th><th>Confidence</th><th>Matched Signals</th></tr></thead><tbody>`+
       EVAL_CASES.map(c=>`<tr>
         <td class="tc">${c.tc}</td><td class="exp">${c.expected}</td>
         <td class="det" style="color:var(--ink-3)">—</td>
@@ -1714,23 +1791,26 @@ function renderEval(hasRun){
     $('#evalSummary').innerHTML=`<div class="eval-stat" style="flex:1 1 100%"><div class="l" style="margin:0">Press <b style="color:var(--cyan)">Run Validation Suite</b> to execute all ${EVAL_CASES.length} cases through the classification engine.</div></div>`;
     return;
   }
-  // executable run — actually classify each case
+  // executable run — actually classify each case, show ALL detected threats
   const results=EVAL_CASES.map(c=>{
     const asset=ASSETS[c.asset];
     const out=classify(c.telemetry, asset);
     const top=out[0];
     const detectedKeys=out.map(o=>o.key);
+    const detectedNames=out.filter(o=>!o.unclassified).map(o=>o.name);
+    // matched signals across the primary detected threats (top 2)
+    const combinedTerms=[...new Set(out.slice(0,2).flatMap(o=>o.terms||[]))];
     const pass=c.expectKeys.some(k=>detectedKeys.includes(k));
-    return {...c, detected:top.name, detectedKey:top.key, conf:top.conf, terms:top.terms||[], pass};
+    return {...c, detectedNames, detectedKeys, conf:top.conf, terms:combinedTerms, pass};
   });
-  t.innerHTML=`<thead><tr><th>Test Case</th><th>Expected Threat</th><th>Detected Threat</th><th>Result</th><th>Confidence</th><th>Matched Signals</th></tr></thead><tbody>`+
+  t.innerHTML=`<thead><tr><th>Test Case</th><th>Expected Threat</th><th>Detected Threats</th><th>Result</th><th>Confidence</th><th>Matched Signals</th></tr></thead><tbody>`+
     results.map(r=>`<tr>
       <td class="tc">${r.tc}</td>
       <td class="exp">${r.expected}</td>
-      <td class="det">${r.detected}</td>
+      <td class="det">${r.detectedNames.join('; ')||'—'}</td>
       <td>${r.pass?'<span class="pass-pill">✓ Pass</span>':'<span class="fail-pill">✗ Fail</span>'}</td>
       <td class="eval-conf" style="color:${r.conf>=90?'var(--green)':r.conf>=80?'var(--cyan)':'var(--amber)'}">${r.conf}%</td>
-      <td class="sig-cell">${(r.terms.slice(0,3).map(x=>`<span class="sig">${x}</span>`).join('')||'<span style="color:var(--ink-3)">—</span>')}</td>
+      <td class="sig-cell">${(r.terms.slice(0,4).map(x=>`<span class="sig">${x}</span>`).join('')||'<span style="color:var(--ink-3)">—</span>')}</td>
     </tr>`).join('')+`</tbody>`;
   const passed=results.filter(r=>r.pass).length;
   const failed=results.length-passed;
@@ -1799,7 +1879,7 @@ $('#scanBtn').onclick=runScan;
   const el=$(id);if(el)el.addEventListener('input',applyTuning);
 });
 const tReset=$('#tuningReset');
-if(tReset)tReset.onclick=()=>{state.tuning=null;syncTuning();if(state.scanned){computeScore();renderImpact();renderRemediation();renderReport();}toast('Tuning reset to asset defaults');};
+if(tReset)tReset.onclick=()=>{state.tuning=null;syncTuning();if(state.scanned){computeScore();renderThreats();renderImpact();renderRemediation();renderReport();}toast('Tuning reset to asset defaults');};
 $('#heroStart').onclick=()=>{
   $('#assetGrid').scrollIntoView({behavior:'smooth',block:'start'});
 };
