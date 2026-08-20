@@ -2,16 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<title>CyberShield AI — Cyber-Physical Threat Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CyberShield AI: Cyber-Physical Threat Intelligence</title>
+<meta name="description" content="CyberShield AI detects cyber threats that can become physical-world incidents across computers, AI agents, drones, vehicles, factories, and smart-city systems, then predicts impact and recommends safe response actions for human review. A student prototype by Ansh Saini.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M17 2L4 7v8c0 8 5.5 13.5 13 17 7.5-3.5 13-9 13-17V7L17 2z' fill='%235b5fe8'/%3E%3Ccircle cx='17' cy='15' r='2.4' fill='%23b9f73e'/%3E%3Cpath d='M17 17.4v4' stroke='%23b9f73e' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 /* ============================================================
-   CyberShield AI — Threat Operations Console
-   Theme: "Cold Ops" — deep slate, signal-amber threat, cyan telemetry
+   CyberShield AI, Threat Operations Console
+   Theme: "Cold Ops", deep slate, signal-amber threat, cyan telemetry
    Single-file. No external CSS/JS deps. Desktop-first, mobile-hardened.
    ============================================================ */
 :root{
-  /* "Titanium Violet + Signal Amber" — light titanium surface, electric indigo-violet
+  /* "Titanium Violet + Signal Amber", light titanium surface, electric indigo-violet
      primary, signal amber alert. A modern AI security console identity. */
   --bg:#f2f3f8;
   --bg-1:#e7e9f2;
@@ -582,9 +584,9 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
         </div>
 
         <div class="view-head">
-          <div class="eyebrow">Step 01 — Asset Profile</div>
+          <div class="eyebrow">Step 01 · Asset Profile</div>
           <h2>What are we protecting?</h2>
-          <p>Pick the system under review. CyberShield builds a risk profile from its autonomy level, physical-safety criticality, and exposure — the factors that decide how a cyber threat becomes a real-world consequence.</p>
+          <p>Pick the system under review. CyberShield builds a risk profile from its autonomy level, physical-safety criticality, and exposure, the factors that decide how a cyber threat becomes a real-world consequence.</p>
         </div>
 
         <div class="stepper" id="stepper"></div>
@@ -602,7 +604,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
 
         <div class="card glow hidden" id="profileCard">
           <h3>Risk profile <span class="mono" style="font-size:11px;color:var(--ink-3);font-weight:400" id="profileName"></span></h3>
-          <div class="sub">Derived baseline — refined once telemetry is classified.</div>
+          <div class="sub">Derived baseline, refined once telemetry is classified.</div>
           <div class="profile-strip" id="profileStrip"></div>
 
           <details class="tuning" id="tuningWrap">
@@ -638,7 +640,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
           <div class="privacy-note"><b>Privacy note:</b> In this prototype, pasted telemetry is processed in the browser for simulation. Do not paste real passwords, private keys, customer data, production secrets, or sensitive incident logs.</div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <button class="btn primary" id="scanBtn">⚡ Run threat scan</button>
-            <span class="sim-badge">◆ Simulation Mode — not a real malware scanner</span>
+            <span class="sim-badge">◆ Simulation Mode, not a real malware scanner</span>
           </div>
         </div>
       </section>
@@ -646,7 +648,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
       <!-- ================= THREATS ================= -->
       <section class="view" id="view-threats">
         <div class="view-head">
-          <div class="eyebrow">Step 02 — Classification</div>
+          <div class="eyebrow">Step 02 · Classification</div>
           <h2>Detected threats</h2>
           <p>Classified against MITRE ATT&CK, MITRE ATLAS (AI systems), and OWASP LLM Top 10, then cross-referenced with the CISA Known Exploited Vulnerabilities catalog.</p>
         </div>
@@ -668,7 +670,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
       <!-- ================= IMPACT ================= -->
       <section class="view" id="view-impact">
         <div class="view-head">
-          <div class="eyebrow">Step 03 — Cyber-Physical Impact</div>
+          <div class="eyebrow">Step 03 · Cyber-Physical Impact</div>
           <h2>What could happen in the real world?</h2>
           <p>The translation layer: the same threat carries different consequences depending on this asset's autonomy and safety criticality. This is the question other scanners don't ask.</p>
         </div>
@@ -699,7 +701,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
       <!-- ================= REMEDIATE ================= -->
       <section class="view" id="view-remediate">
         <div class="view-head">
-          <div class="eyebrow">Step 04 — Adaptive Remediation</div>
+          <div class="eyebrow">Step 04 · Adaptive Remediation</div>
           <h2>Recommended response</h2>
           <p>Defensive actions ordered by urgency for this asset type, plus categories of security products that address each gap. CyberShield recommends categories, never a single forced product.</p>
         </div>
@@ -715,9 +717,9 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
       <!-- ================= REPORT ================= -->
       <section class="view" id="view-report">
         <div class="view-head">
-          <div class="eyebrow">Step 05 — Human Review</div>
+          <div class="eyebrow">Step 05 · Human Review</div>
           <h2>Incident report</h2>
-          <p>A shareable summary for human review. CyberShield supports decisions — it does not replace a cybersecurity professional or remove malware.</p>
+          <p>A shareable summary for human review. CyberShield supports decisions. It does not replace a cybersecurity professional or remove malware.</p>
         </div>
         <div id="reportBody">
           <div class="empty">
@@ -747,7 +749,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
         <div class="view-head">
           <div class="eyebrow">Testing & Evaluation</div>
           <h2>Classification validation</h2>
-          <p>Synthetic test cases that validate the detection logic, impact scoring, and remediation mapping. Every case is deterministic — the same telemetry always yields the same classification.</p>
+          <p>Synthetic test cases that validate the detection logic, impact scoring, and remediation mapping. Every case is deterministic. The same telemetry always yields the same classification.</p>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
           <button class="btn primary" id="runSuiteBtn">▶ Run Validation Suite</button>
@@ -778,7 +780,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
         </div>
         <div class="card" style="padding:0;overflow:hidden">
           <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:between">
-            <h3 style="font-size:13px">CISA KEV — recent additions</h3>
+            <h3 style="font-size:13px">CISA KEV · recent additions</h3>
           </div>
           <div id="feedList"></div>
         </div>
@@ -794,7 +796,7 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
         <div class="view-head">
           <div class="eyebrow">About</div>
           <h2>About CyberShield AI</h2>
-          <p>A cyber-physical threat intelligence prototype — detecting digital, AI, and autonomous-system risks and translating them into real-world safety impact.</p>
+          <p>A cyber-physical threat intelligence prototype, detecting digital, AI, and autonomous-system risks and translating them into real-world safety impact.</p>
         </div>
 
         <div class="card glow" style="margin-bottom:14px">
@@ -870,9 +872,9 @@ main.stage{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;-we
 
 <script>
 /* ============================================================
-   CyberShield AI — application logic
+   CyberShield AI, application logic
    ============================================================ */
-const AI_ENGINE = "cybershield-core-v1"; // internal only — never surfaced to end users
+const AI_ENGINE = "cybershield-core-v1"; // internal only, never surfaced to end users
 
 /* ---------- Asset definitions: autonomy + safety baselines ---------- */
 const ASSETS = {
@@ -1029,7 +1031,7 @@ function impactProjection(threatKey, asset){
     supplychain:{ phys:["Malicious firmware altering device behavior"], digital:["Backdoored dependency","Broad blast radius"]},
     phishing:{ phys:["Operator account misused to send unsafe commands"], digital:["Account takeover","Credential reuse"]},
   };
-  const e = lib[threatKey] || {phys:asset.physical?["Potential effect on a safety-critical function — unverified"]:[],digital:["Unverified anomaly — manual analysis required"]};
+  const e = lib[threatKey] || {phys:asset.physical?["Potential effect on a safety-critical function, unverified"]:[],digital:["Unverified anomaly, manual analysis required"]};
   let out = [];
   if(phys) e.phys.forEach(p=>out.push({txt:p,physical:true}));
   e.digital.forEach(d=>out.push({txt:d,physical:false}));
@@ -1106,7 +1108,7 @@ function remediationFor(threatKey, asset){
       {t:"Review account activity for misuse",p:2,d:"Check for damage.",cat:"siem"},
     ],
     unclassified:[
-      {t:"Escalate to a human analyst for manual review",p:1,d:"No signature matched — a person should inspect the telemetry.",cat:"ir"},
+      {t:"Escalate to a human analyst for manual review",p:1,d:"No signature matched, a person should inspect the telemetry.",cat:"ir"},
       {t:"Preserve logs and isolate the asset if behavior is abnormal",p:1,d:"Contain first; confirm later.",cat:"siem"},
       {t:"Run full scans with production security tooling",p:2,d:"This prototype does not replace real detection tools.",cat:"vuln"},
     ],
@@ -1320,7 +1322,7 @@ function finishScan(log){
   renderThreats();renderImpact();renderRemediation();renderReport();renderStepper();
   const n=state.threats.length;
   const unc=state.threats[0]&&state.threats[0].unclassified;
-  toast(unc?'Unclassified activity — human review required':(n+' threat type'+(n>1?'s':'')+' classified'),'warn');
+  toast(unc?'Unclassified activity, human review required':(n+' threat type'+(n>1?'s':'')+' classified'),'warn');
 }
 
 function sevColor(s){if(s>=9)return'var(--grade-crit)';if(s>=7)return'var(--grade-high)';if(s>=5)return'var(--grade-med)';return'var(--grade-low)';}
@@ -1346,7 +1348,7 @@ function renderThreats(){
     const rowFor=(cv)=>{
       const knownLabel=cv.known==='yes'?'Known exploited':cv.known==='no'?'Not in KEV':'Unknown';
       const knownCol=cv.known==='yes'?'var(--red)':cv.known==='no'?'var(--ink-2)':'var(--amber)';
-      const verdict=cv.known==='yes'?'Known exploited in the wild — prioritize remediation.':cv.known==='no'?'Not found in the loaded KEV data — verify with vendor and official advisories.':'KEV data unavailable — verify with vendor and official advisories.';
+      const verdict=cv.known==='yes'?'Known exploited in the wild, prioritize remediation.':cv.known==='no'?'Not found in the loaded KEV data, verify with vendor and official advisories.':'KEV data unavailable, verify with vendor and official advisories.';
       const priority=cv.known==='yes'?'Patch immediately.':'Investigate and follow vendor guidance.';
       return `<div class="cve-row" style="border-left:3px solid ${knownCol}">
         <div class="cve-top"><span class="v mono" style="font-weight:700">${cv.id}</span><span class="cve-badge" style="color:${knownCol};border-color:${knownCol}">${knownLabel}</span></div>
@@ -1478,7 +1480,7 @@ function computeScore(){
   };
   const w={severity:0.25,criticality:0.22,autonomy:0.15,physical:0.28,exposure:0.10};
   let raw=0;Object.keys(w).forEach(k=>raw+=factors[k]*w[k]);
-  // human oversight reduces effective risk — a manual override cuts more than review
+  // human oversight reduces effective risk, a manual override cuts more than review
   const oversightMult=p.oversight==='manual'?0.82:p.oversight==='review'?0.91:1.0;
   let score=Math.round(raw*100*oversightMult);
   score=Math.max(0,Math.min(100,score));
@@ -1511,7 +1513,7 @@ function renderImpact(){
       <div class="num"><b style="color:${s.gcol}">${s.score}</b><span>/ 100</span><div class="grade" style="color:${s.gcol}">${s.grade}</div></div>
     </div>
     <div style="flex:1;width:100%">
-      <div class="sub" style="margin-bottom:12px;font-size:12.5px;color:var(--ink-2)">Cyber-physical risk for <b style="color:var(--ink)">${a.name}</b> — weighted by how a cyber threat translates to real-world consequence.${s.oversight&&s.oversight!=='none'?` Human oversight (<b>${s.oversight==='manual'?'manual override':'human review'}</b>) reduces the effective score.`:''}</div>
+      <div class="sub" style="margin-bottom:12px;font-size:12.5px;color:var(--ink-2)">Cyber-physical risk for <b style="color:var(--ink)">${a.name}</b>, weighted by how a cyber threat translates to real-world consequence.${s.oversight&&s.oversight!=='none'?` Human oversight (<b>${s.oversight==='manual'?'manual override':'human review'}</b>) reduces the effective score.`:''}</div>
       <div class="score-factors">${facts.map(f=>`<div class="sf"><span class="lab">${f.lab}</span><span class="track"><i style="width:${Math.round(f.v*100)}%;background:${f.col}"></i></span><span class="val">${Math.round(f.v*100)}</span></div>`).join('')}</div>
     </div>
   </div></div>`;
@@ -1519,7 +1521,7 @@ function renderImpact(){
   // impact projections per threat
   state.threats.forEach(t=>{
     const proj=impactProjection(t.key,a);
-    html+=`<div class="card" style="margin-bottom:14px"><h3>${t.name} — projected impact</h3><div class="sub">If this threat affects <b style="color:var(--ink-2)">${a.name}</b>:</div><div class="impact-grid">`;
+    html+=`<div class="card" style="margin-bottom:14px"><h3>${t.name}: projected impact</h3><div class="sub">If this threat affects <b style="color:var(--ink-2)">${a.name}</b>:</div><div class="impact-grid">`;
     proj.forEach(p=>{
       html+=`<div class="impact ${p.physical?'phys':''}"><div class="lvl">${p.physical?'⚠ PHYSICAL':'◆ DIGITAL'}</div><b>${p.txt}</b></div>`;
     });
@@ -1597,7 +1599,7 @@ function renderRemediation(){
     html+='</div></div>';
   });
   // vendor guidance
-  html+=`<div class="card" style="margin-bottom:14px"><h3>Security product categories</h3><div class="sub">Categories that address the gaps above. CyberShield names <b style="color:var(--ink-2)">categories, not single products</b> — choose vendors that fit your environment.</div><div class="vendor-grid">`;
+  html+=`<div class="card" style="margin-bottom:14px"><h3>Security product categories</h3><div class="sub">Categories that address the gaps above. CyberShield names <b style="color:var(--ink-2)">categories, not single products</b>, choose vendors that fit your environment.</div><div class="vendor-grid">`;
   Object.entries(VENDOR_CATS).forEach(([k,v])=>{
     const match=allCats.has(k);
     html+=`<div class="vendor ${match?'match':''}"><div class="vh"><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">${v.icon}</svg></span><b>${v.name}</b></div><p>${v.desc}</p><div class="ex">${v.ex}</div>${match?'<span class="match-flag">▲ relevant to this incident</span>':''}</div>`;
@@ -1615,7 +1617,7 @@ function renderReport(){
   const topThreat=state.threats[0];
   const cveCount=(state.cves&&state.cves.length)||0;
   const cveLine=state.cve?`<div><span class="k">CVE intel</span><span class="v" style="font-size:13px">${state.cve.id}${cveCount>1?' +'+(cveCount-1)+' more':''} · ${state.cve.known==='yes'?'known exploited':state.cve.known==='no'?'not in KEV':'unknown'}</span></div>`:'';
-  let html=`<div class="report"><div class="rhead"><h3>Incident summary — ${p.name}</h3><div class="sub mono" style="margin-top:4px">${id} · ${ts}</div></div><div class="rbody">
+  let html=`<div class="report"><div class="rhead"><h3>Incident summary: ${p.name}</h3><div class="sub mono" style="margin-top:4px">${id} · ${ts}</div></div><div class="rbody">
     <div class="kv">
       <div><span class="k">Risk score</span><span class="v" style="color:${s.gcol}">${s.score} / 100 · ${s.grade}</span></div>
       <div><span class="k">Threats</span><span class="v">${state.threats.length}</span></div>
@@ -1627,7 +1629,7 @@ function renderReport(){
       ${cveLine}
     </div>
     ${p.tuned?'<p style="font-size:11.5px;color:var(--amber);margin:2px 0 8px">▲ Profile values adjusted via Advanced Risk Tuning.</p>':''}
-    <h4>Classified threats</h4><ul>${state.threats.map(t=>`<li><b style="color:var(--ink)">${t.name}</b> — severity ${t.sev}/10, ${t.conf}% confidence · ${t.frameworks.join(', ')}</li>`).join('')}</ul>
+    <h4>Classified threats</h4><ul>${state.threats.map(t=>`<li><b style="color:var(--ink)">${t.name}</b>, severity ${t.sev}/10, ${t.conf}% confidence · ${t.frameworks.join(', ')}</li>`).join('')}</ul>
     <h4>Primary cyber-physical concern</h4>
     <p>${impactProjection(topThreat.key,a).filter(x=>x.physical).map(x=>x.txt).join('; ')||impactProjection(topThreat.key,a).map(x=>x.txt).slice(0,2).join('; ')}.</p>
     <h4>Immediate actions</h4><ul>${state.threats.flatMap(t=>remediationFor(t.key,a).filter(r=>r.p===1)).slice(0,5).map(r=>`<li>${r.t}</li>`).join('')}</ul>
@@ -1642,7 +1644,7 @@ function renderReport(){
   c.innerHTML=html;
   const cr=$('#copyReport');
   if(cr)cr.onclick=()=>{
-    const txt=`CyberShield AI — ${id}\nAsset: ${p.name}\nRisk: ${s.score}/100 (${s.grade})\nThreats: ${state.threats.map(t=>t.name).join(', ')}\nGenerated ${ts}`;
+    const txt=`CyberShield AI · ${id}\nAsset: ${p.name}\nRisk: ${s.score}/100 (${s.grade})\nThreats: ${state.threats.map(t=>t.name).join(', ')}\nGenerated ${ts}`;
     navigator.clipboard?.writeText(txt).then(()=>toast('Summary copied')).catch(()=>toast('Copy failed','err'));
   };
   const dj=$('#downloadJson');
@@ -1744,7 +1746,7 @@ async function loadFeeds(initial){
 
 function renderFeed(rows,mode){
   const c=$('#feedList');
-  c.innerHTML=rows.map(r=>`<div class="feed-row"><span class="cve">${r.cve}</span><span class="desc">${r.vendor?r.vendor+' — ':''}${r.name}</span><span class="when">${r.added||''}</span></div>`).join('');
+  c.innerHTML=rows.map(r=>`<div class="feed-row"><span class="cve">${r.cve}</span><span class="desc">${r.vendor?r.vendor+', ':''}${r.name}</span><span class="when">${r.added||''}</span></div>`).join('');
   const now=new Date().toLocaleString();
   const label={live:'Live · CISA KEV · updated '+now,sample:'Sample KEV data · live feed unavailable',offline:'Offline · no feed'}[mode];
   $('#feedStatusText').textContent=label;
@@ -1801,7 +1803,7 @@ function runScenario(n){
 function renderEval(hasRun){
   const t=$('#evalTable');if(!t)return;
   if(!hasRun){
-    // idle state — show cases without results until the suite is run
+    // idle state, show cases without results until the suite is run
     t.innerHTML=`<thead><tr><th>Test Case</th><th>Expected Threat</th><th>Detected Threats</th><th>Result</th><th>Confidence</th><th>Matched Signals</th></tr></thead><tbody>`+
       EVAL_CASES.map(c=>`<tr>
         <td class="tc">${c.tc}</td><td class="exp">${c.expected}</td>
@@ -1813,7 +1815,7 @@ function renderEval(hasRun){
     $('#evalSummary').innerHTML=`<div class="eval-stat" style="flex:1 1 100%"><div class="l" style="margin:0">Press <b style="color:var(--cyan)">Run Validation Suite</b> to execute all ${EVAL_CASES.length} cases through the classification engine.</div></div>`;
     return;
   }
-  // executable run — actually classify each case, show ALL detected threats
+  // executable run, actually classify each case, show ALL detected threats
   const results=EVAL_CASES.map(c=>{
     const asset=ASSETS[c.asset];
     const out=classify(c.telemetry, asset);
@@ -1867,11 +1869,11 @@ $$('.rbtn').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
    ============================================================ */
 const TOUR=[
   {view:'assess',title:'Welcome to CyberShield AI',text:"This is a cyber-physical threat intelligence console. The core idea: the same cyber threat means very different things depending on what it hits. We'll walk a self-driving vehicle scenario.",action:()=>{}},
-  {view:'assess',title:'1 · Pick the asset',text:"We're selecting a self-driving vehicle — autonomy level 5, maximum safety criticality. Notice the risk profile that appears: this is what makes a cyber threat a physical one.",action:()=>{selectAsset('vehicle');}},
-  {view:'assess',title:'2 · Load telemetry',text:"We've loaded a GPS-spoofing trace — coordinates jumping 4km in a fraction of a second. Now we run the scan.",action:()=>{$('#logInput').value=SAMPLES.vehicle[0].text;}},
+  {view:'assess',title:'1 · Pick the asset',text:"We're selecting a self-driving vehicle, autonomy level 5, maximum safety criticality. Notice the risk profile that appears: this is what makes a cyber threat a physical one.",action:()=>{selectAsset('vehicle');}},
+  {view:'assess',title:'2 · Load telemetry',text:"We've loaded a GPS-spoofing trace, coordinates jumping 4km in a fraction of a second. Now we run the scan.",action:()=>{$('#logInput').value=SAMPLES.vehicle[0].text;}},
   {view:'threats',title:'3 · Classification',text:"CyberShield classified GPS spoofing and mapped it to MITRE ATLAS and ISO/SAE 21434. The PHYSICAL-SAFETY tag flags threats that can cause real-world harm on this asset.",action:()=>{if(!state.scanned){finishScan(SAMPLES.vehicle[0].text);}}},
   {view:'impact',title:'4 · The translation layer',text:"This is the part other scanners skip. The same GPS spoof on a phone is a wrong turn; on an autonomous vehicle it's collision risk and restricted-zone entry. The score weights physical-safety impact heavily.",action:()=>{}},
-  {view:'remediate',title:'5 · Adaptive response & report',text:"Actions are ordered by urgency — disabling autonomy comes first. Product categories (not forced brands) address each gap, and the Report tab produces a human-review summary. That's the full loop.",action:()=>{}},
+  {view:'remediate',title:'5 · Adaptive response & report',text:"Actions are ordered by urgency, disabling autonomy comes first. Product categories (not forced brands) address each gap, and the Report tab produces a human-review summary. That's the full loop.",action:()=>{}},
 ];
 let tourI=0,tourActive=false;
 function startTour(){tourActive=true;tourI=0;showTour();}
@@ -1888,7 +1890,7 @@ function showTour(){
   $('#coach').classList.add('show');
 }
 function endTour(){tourActive=false;$('#coach').classList.remove('show');}
-$('#coachNext').onclick=()=>{if(tourI===TOUR.length-1){endTour();toast('Tour complete — explore freely');return;}tourI++;showTour();};
+$('#coachNext').onclick=()=>{if(tourI===TOUR.length-1){endTour();toast('Tour complete, explore freely');return;}tourI++;showTour();};
 $('#coachBack').onclick=()=>{if(tourI>0){tourI--;showTour();}};
 $('#coachSkip').onclick=endTour;
 $('#demoBtn').onclick=startTour;
