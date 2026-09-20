@@ -598,7 +598,7 @@ async function loadFeed(force){
   state.feedRows=rows; state.feedPage=0;
   state.feedFetched=new Date().toLocaleTimeString();
   renderFeedPage();
-  if(btn){ btn.disabled=false; btn.textContent='Next 15'; }
+  if(btn){ btn.disabled=false; btn.textContent='Refresh'; }
   if(state.analysis){ detectCVEs(state.lastLog); renderThreats(); renderReport(); }
 }
 
