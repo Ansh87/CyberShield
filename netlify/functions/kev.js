@@ -12,8 +12,9 @@ export const handler = async () => {
   const CORS = {
     "Access-Control-Allow-Origin": "*",
     "Content-Type": "application/json",
-    // cache at the edge for 1 hour so we don't refetch on every visit
-    "Cache-Control": "public, max-age=3600",
+    // Short cache only. An hour of edge caching made the refresh button look
+    // broken, because it returned a byte identical response every time.
+    "Cache-Control": "public, max-age=60",
   };
 
   try {
@@ -36,9 +37,17 @@ export const handler = async () => {
 
     const data = await res.json();
 
-    // Full catalog for lookup; trimmed list for display.
+    // Full catalog for lookup, trimmed list for display.
     const vulns = Array.isArray(data.vulnerabilities) ? data.vulnerabilities : [];
-    const recent = vulns.slice(-40).reverse().map((v) => ({
+
+    // Sort by date rather than trusting the upstream array order. CISA currently
+    // ships newest first, but relying on that silently served entries from 2021
+    // when the assumption was wrong, so the order is now established here.
+    const newestFirst = vulns
+      .slice()
+      .sort((a, b) => String(b.dateAdded || "").localeCompare(String(a.dateAdded || "")));
+
+    const recent = newestFirst.slice(0, 40).map((v) => ({
       cveID: v.cveID,
       vendorProject: v.vendorProject,
       product: v.product,
