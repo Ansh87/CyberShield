@@ -47,7 +47,8 @@ export const handler = async () => {
       .slice()
       .sort((a, b) => String(b.dateAdded || "").localeCompare(String(a.dateAdded || "")));
 
-    const recent = newestFirst.slice(0, 40).map((v) => ({
+    // Enough entries for the app to page through fifteen at a time.
+    const recent = newestFirst.slice(0, 150).map((v) => ({
       cveID: v.cveID,
       vendorProject: v.vendorProject,
       product: v.product,
