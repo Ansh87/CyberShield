@@ -26,6 +26,8 @@ The result is then reduced by how much human oversight exists. Manual override m
 
 Keeping the arithmetic deterministic means the same finding on the same asset always scores the same, and the weighting can be inspected and argued with rather than taken on faith.
 
+The Intel tab lists the most recent additions to the catalog fifteen at a time. The button pages forward through them, and wrapping past the end refetches.
+
 **CVE identifiers are checked against live data.** Any CVE found in the telemetry is cross referenced against the CISA catalog of vulnerabilities confirmed as exploited in the wild, fetched at runtime.
 
 ## Project structure

@@ -53,6 +53,7 @@ const state = {
   assetKey:null, asset:null, tuning:null,
   analysis:null, score:null, cves:[], lastLog:'',
   kevIds:new Set(KEV_SEED.map(r=>r.cve)), kevLoaded:false, kevLive:false,
+  feedRows:[], feedPage:0, feedFetched:'',
   busy:false,
 };
 
@@ -582,8 +583,7 @@ async function loadFeed(force){
       // of the function that returned the oldest entries first.
       const newestFirst=list.slice()
         .sort((a,b)=>String(b.dateAdded||'').localeCompare(String(a.dateAdded||'')));
-      const recent=newestFirst.slice(0,14);
-      rows=recent.map(v=>({cve:v.cveID, vendor:v.vendorProject, name:v.vulnerabilityName, added:v.dateAdded}));
+      rows=newestFirst.map(v=>({cve:v.cveID, vendor:v.vendorProject, name:v.vulnerabilityName, added:v.dateAdded}));
       const allIds = Array.isArray(data.allCveIds) ? data.allCveIds : list.map(v=>v.cveID);
       state.kevIds=new Set(allIds.map(i=>(i||'').toUpperCase()));
       live=true;
@@ -595,15 +595,39 @@ async function loadFeed(force){
     state.kevIds=new Set(KEV_SEED.map(r=>r.cve));
   }
   state.kevLoaded=true; state.kevLive=live;
-  $('#feedList').innerHTML=rows.map(r=>
+  state.feedRows=rows; state.feedPage=0;
+  state.feedFetched=new Date().toLocaleTimeString();
+  renderFeedPage();
+  if(btn){ btn.disabled=false; btn.textContent='Next 15'; }
+  if(state.analysis){ detectCVEs(state.lastLog); renderThreats(); renderReport(); }
+}
+
+const FEED_PAGE_SIZE=15;
+
+function renderFeedPage(){
+  const all=state.feedRows, total=all.length;
+  const pages=Math.max(1, Math.ceil(total/FEED_PAGE_SIZE));
+  if(state.feedPage>=pages) state.feedPage=0;
+  const start=state.feedPage*FEED_PAGE_SIZE;
+  const shown=all.slice(start, start+FEED_PAGE_SIZE);
+  $('#feedList').innerHTML=shown.map(r=>
     '<div class="feed-row"><span class="cve">'+esc(r.cve)+'</span>'
     +'<span class="desc">'+esc((r.vendor?r.vendor+', ':'')+r.name)+'</span>'
     +'<span class="when">'+esc(r.added||'')+'</span></div>').join('');
-  $('#feedState').textContent = live
-    ? 'Live, '+state.kevIds.size+' vulnerabilities loaded from CISA, checked '+new Date().toLocaleTimeString()
+  $('#feedState').textContent = state.kevLive
+    ? 'Showing '+(start+1)+' to '+(start+shown.length)+' of '+total+' recent entries, from '
+      +state.kevIds.size+' in the CISA catalog, loaded '+state.feedFetched
     : 'Offline sample, the live catalog was not reachable';
-  if(btn){ btn.disabled=false; btn.textContent='Refresh'; }
-  if(state.analysis){ detectCVEs(state.lastLog); renderThreats(); renderReport(); }
+}
+
+// Each press advances a page. Wrapping past the end refetches, so the button
+// both pages through the catalog and eventually pulls fresh data.
+function nextFeedPage(){
+  const pages=Math.max(1, Math.ceil(state.feedRows.length/FEED_PAGE_SIZE));
+  if(!state.feedRows.length || state.feedPage+1>=pages){ state.feedPage=0; loadFeed(true); return; }
+  state.feedPage++;
+  renderFeedPage();
+  $('#stage').scrollTop=0;
 }
 
 /* ============================================================
@@ -650,7 +674,7 @@ $('#coachSkip').onclick=()=>$('#coach').classList.remove('show');
    ============================================================ */
 $('#aboutBtn').onclick=()=>switchView('about');
 $('#scanBtn').onclick=()=>runAnalysis();
-$('#refreshFeed').onclick=()=>loadFeed(true);
+$('#refreshFeed').onclick=nextFeedPage;
 ['#tAuto','#tExp','#tSafe','#tOversight'].forEach(id=>$(id).addEventListener('input',applyTuning));
 $('#tuningReset').onclick=()=>{
   state.tuning=null; syncTuning(); renderProfile();
