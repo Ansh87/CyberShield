@@ -60,7 +60,7 @@ The app requires the Gemini function to work. It will load without it, but analy
    - Value: your key
    - Scopes: Functions must be included
    - Deploy contexts: All
-4. Optionally add a second variable, `GEMINI_MODEL`, to change which model is used without editing any code. Leave it unset to use the built in default. Any Gemini model id that supports `generateContent` works, for example `gemini-3.8-flash` or `gemini-2.5-flash`.
+4. Optionally add a second variable, `GEMINI_MODEL`, to change which model is used without editing any code. Leave it unset to use the built in default. Any Gemini model id that supports `generateContent` works, for example `gemini-3.5-flash`, `gemini-3.8-flash` or `gemini-2.5-flash`.
 5. Redeploy. Functions read environment variables at deploy time, so a variable does nothing until you do. Use **Deploys, Trigger deploy, Clear cache and deploy site**.
 
 ## Checking what is deployed
@@ -70,8 +70,8 @@ Open `https://YOUR-SITE.netlify.app/status` in a browser. It reports which model
 ```json
 {
   "service": "cybershield-analyze",
-  "model": "gemini-3.8-flash",
-  "defaultModel": "gemini-3.8-flash",
+  "model": "gemini-3.5-flash",
+  "defaultModel": "gemini-3.5-flash",
   "modelSource": "built in default",
   "keyConfigured": true,
   "ready": true

@@ -571,7 +571,11 @@ async function loadFeed(){
       const data=await res.json();
       const list=data&&data.vulnerabilities;
       if(!list||!list.length) continue;
-      const recent = src.proxied ? list.slice(0,14) : list.slice(-14).reverse();
+      // The proxy already sorts newest first. For a direct fetch, sort here
+      // rather than assuming the upstream order.
+      const newestFirst = src.proxied ? list
+        : list.slice().sort((a,b)=>String(b.dateAdded||'').localeCompare(String(a.dateAdded||'')));
+      const recent = newestFirst.slice(0,14);
       rows=recent.map(v=>({cve:v.cveID, vendor:v.vendorProject, name:v.vulnerabilityName, added:v.dateAdded}));
       const allIds = Array.isArray(data.allCveIds) ? data.allCveIds : list.map(v=>v.cveID);
       state.kevIds=new Set(allIds.map(i=>(i||'').toUpperCase()));
