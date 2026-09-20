@@ -7,7 +7,7 @@
      formula, and checks any CVE against the live CISA catalog.
    ============================================================ */
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.8-flash';
 const PROXY_URL = '/.netlify/functions/analyze';
 
 /* ---------- Asset baselines ---------- */
@@ -138,8 +138,7 @@ ${telemetry}
     generationConfig:{
       temperature:0.2,
       responseMimeType:'application/json',
-      responseSchema:RESPONSE_SCHEMA,
-      thinkingConfig:{thinkingBudget:0}
+      responseSchema:RESPONSE_SCHEMA
     }
   };
 }
