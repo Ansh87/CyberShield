@@ -7,7 +7,7 @@
      formula, and checks any CVE against the live CISA catalog.
    ============================================================ */
 
-const GEMINI_MODEL = 'gemini-3.8-flash';
+const GEMINI_MODEL_FALLBACK = 'unreported'; // only used if Gemini omits modelVersion
 const PROXY_URL = '/.netlify/functions/analyze';
 
 /* ---------- Asset baselines ---------- */
@@ -183,6 +183,9 @@ function parseGemini(data){
     t.signals = Array.isArray(t.signals)?t.signals:[];
   });
   out.threats.sort((a,b)=>b.confidence-a.confidence||b.severity-a.severity);
+  // Gemini reports the model that actually served the request. Record it so the
+  // exported report states the real engine rather than a value hardcoded here.
+  out.modelVersion = data.modelVersion || GEMINI_MODEL_FALLBACK;
   return out;
 }
 
@@ -432,6 +435,7 @@ function renderReport(){
     ['Physical risk', p.physical?'Yes':'Digital only'],
   ];
   if(state.cves.length) kv.push(['Vulnerabilities', state.cves.map(c=>c.id+(c.known?', known exploited':'')).join('; ')]);
+  kv.push(['Analysis engine', a.modelVersion||GEMINI_MODEL_FALLBACK]);
 
   const physImpacts=p.physical?a.physicalImpacts:[];
   const immediate=a.actions.filter(r=>(r.priority||'').toLowerCase()==='immediate');
@@ -473,7 +477,7 @@ function downloadJson(){
     reportId:state.reportId,
     generated:state.reportTime,
     generatedISO:new Date().toISOString(),
-    engine:{classification:'google '+GEMINI_MODEL, scoring:'deterministic weighted formula'},
+    engine:{classification:'google '+(a.modelVersion||GEMINI_MODEL_FALLBACK), scoring:'deterministic weighted formula'},
     assetType:p.name,
     profile:{
       autonomyLevel:p.auto, exposure:p.exposure, safetyCriticality:p.safety,

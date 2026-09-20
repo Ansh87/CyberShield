@@ -4,3 +4,10 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Friendly URL for the status probe. Status 200 rewrites rather than redirects,
+# so the request method is preserved and the function sees a plain GET.
+[[redirects]]
+  from = "/status"
+  to = "/.netlify/functions/analyze"
+  status = 200

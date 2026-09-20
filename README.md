@@ -60,15 +60,33 @@ The app requires the Gemini function to work. It will load without it, but analy
    - Value: your key
    - Scopes: Functions must be included
    - Deploy contexts: All
-4. Redeploy. Functions read environment variables at deploy time, so the variable does nothing until you do. Use **Deploys, Trigger deploy, Clear cache and deploy site**.
+4. Optionally add a second variable, `GEMINI_MODEL`, to change which model is used without editing any code. Leave it unset to use the built in default. Any Gemini model id that supports `generateContent` works, for example `gemini-3.8-flash` or `gemini-2.5-flash`.
+5. Redeploy. Functions read environment variables at deploy time, so a variable does nothing until you do. Use **Deploys, Trigger deploy, Clear cache and deploy site**.
 
-Verify it took:
+## Checking what is deployed
 
-```bash
-curl -s -X POST https://YOUR-SITE.netlify.app/.netlify/functions/analyze -H "Content-Type: application/json" -d '{"contents":[{"role":"user","parts":[{"text":"reply with the single word ok"}]}]}'
+Open `https://YOUR-SITE.netlify.app/status` in a browser. It reports which model this deployment will use, where that setting came from, and whether a key is present. It never returns the key itself.
+
+```json
+{
+  "service": "cybershield-analyze",
+  "model": "gemini-3.8-flash",
+  "defaultModel": "gemini-3.8-flash",
+  "modelSource": "built in default",
+  "keyConfigured": true,
+  "ready": true
+}
 ```
 
-A response containing `candidates` means the key is wired up. `{"error":"no_key"}` means the variable is missing, misspelled, or you have not redeployed yet.
+If `ready` is false, the key is missing, misspelled, or you have not redeployed since setting it.
+
+That endpoint reports what the deployment intends to use. To confirm what actually served a request, read the `modelVersion` field that Gemini returns:
+
+```bash
+curl -s -X POST https://YOUR-SITE.netlify.app/.netlify/functions/analyze -H "Content-Type: application/json" -d '{"contents":[{"role":"user","parts":[{"text":"reply with the single word ok"}]}]}' | grep -o '"modelVersion":"[^"]*"'
+```
+
+The same value is recorded in every exported report, so a report always names the engine that produced it.
 
 ## Running locally
 
