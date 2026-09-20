@@ -4,10 +4,20 @@
 // API key from the server environment so a visitor does not need one of their
 // own, then returns the raw Gemini response.
 //
-// Set GEMINI_API_KEY in the Netlify site environment variables.
-// Endpoint once deployed: https://<your-site>.netlify.app/.netlify/functions/analyze
+// Environment variables, set in the Netlify site configuration:
+//   GEMINI_API_KEY   required, the key is never sent to the browser
+//   GEMINI_MODEL     optional, overrides the default model below
+//
+// Endpoints once deployed:
+//   POST /.netlify/functions/analyze   run an analysis
+//   GET  /status                       report the active model and key state
 
-const MODEL = "gemini-3.8-flash";
+const DEFAULT_MODEL = "gemini-3.8-flash";
+
+function activeModel() {
+  const configured = (process.env.GEMINI_MODEL || "").trim();
+  return configured || DEFAULT_MODEL;
+}
 
 const JSON_HEADERS = {
   "Content-Type": "application/json",
@@ -15,6 +25,23 @@ const JSON_HEADERS = {
 };
 
 export const handler = async (event) => {
+  // A GET is a status probe. It reports which model this deployment will use
+  // and whether a key is present, but never the key itself.
+  if (event.httpMethod === "GET") {
+    return {
+      statusCode: 200,
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        service: "cybershield-analyze",
+        model: activeModel(),
+        defaultModel: DEFAULT_MODEL,
+        modelSource: process.env.GEMINI_MODEL ? "GEMINI_MODEL environment variable" : "built in default",
+        keyConfigured: Boolean(process.env.GEMINI_API_KEY),
+        ready: Boolean(process.env.GEMINI_API_KEY),
+      }),
+    };
+  }
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -55,7 +82,7 @@ export const handler = async (event) => {
 
   const upstream =
     "https://generativelanguage.googleapis.com/v1beta/models/" +
-    MODEL +
+    activeModel() +
     ":generateContent";
 
   try {
