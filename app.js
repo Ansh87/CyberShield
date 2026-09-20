@@ -555,7 +555,9 @@ async function runAnalysis(telemetry){
 /* ============================================================
    Vulnerability catalog
    ============================================================ */
-async function loadFeed(){
+async function loadFeed(force){
+  const btn=$('#refreshFeed');
+  if(btn){ btn.disabled=true; btn.textContent=force?'Refreshing':'Refresh'; }
   $('#feedState').textContent='Loading the CISA catalog';
   let rows=[], live=false;
   const sources=[
@@ -565,17 +567,22 @@ async function loadFeed(){
   for(const src of sources){
     try{
       const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),9000);
-      const res=await fetch(src.url,{signal:ctrl.signal});
+      // no-store keeps the browser from replaying an old cached catalog, which
+      // previously made the refresh button look like it did nothing. A manual
+      // refresh also adds a unique parameter to get past any edge cache.
+      const url=src.url+(force?(src.url.includes('?')?'&':'?')+'cb='+Date.now():'');
+      const res=await fetch(url,{signal:ctrl.signal,cache:'no-store'});
       clearTimeout(to);
       if(!res.ok) continue;
       const data=await res.json();
       const list=data&&data.vulnerabilities;
       if(!list||!list.length) continue;
-      // The proxy already sorts newest first. For a direct fetch, sort here
-      // rather than assuming the upstream order.
-      const newestFirst = src.proxied ? list
-        : list.slice().sort((a,b)=>String(b.dateAdded||'').localeCompare(String(a.dateAdded||'')));
-      const recent = newestFirst.slice(0,14);
+      // Always sort here rather than trusting any upstream order, including the
+      // proxy's. This keeps the display correct even against an older deployment
+      // of the function that returned the oldest entries first.
+      const newestFirst=list.slice()
+        .sort((a,b)=>String(b.dateAdded||'').localeCompare(String(a.dateAdded||'')));
+      const recent=newestFirst.slice(0,14);
       rows=recent.map(v=>({cve:v.cveID, vendor:v.vendorProject, name:v.vulnerabilityName, added:v.dateAdded}));
       const allIds = Array.isArray(data.allCveIds) ? data.allCveIds : list.map(v=>v.cveID);
       state.kevIds=new Set(allIds.map(i=>(i||'').toUpperCase()));
@@ -593,8 +600,9 @@ async function loadFeed(){
     +'<span class="desc">'+esc((r.vendor?r.vendor+', ':'')+r.name)+'</span>'
     +'<span class="when">'+esc(r.added||'')+'</span></div>').join('');
   $('#feedState').textContent = live
-    ? 'Live, '+state.kevIds.size+' vulnerabilities loaded from CISA'
+    ? 'Live, '+state.kevIds.size+' vulnerabilities loaded from CISA, checked '+new Date().toLocaleTimeString()
     : 'Offline sample, the live catalog was not reachable';
+  if(btn){ btn.disabled=false; btn.textContent='Refresh'; }
   if(state.analysis){ detectCVEs(state.lastLog); renderThreats(); renderReport(); }
 }
 
@@ -642,7 +650,7 @@ $('#coachSkip').onclick=()=>$('#coach').classList.remove('show');
    ============================================================ */
 $('#aboutBtn').onclick=()=>switchView('about');
 $('#scanBtn').onclick=()=>runAnalysis();
-$('#refreshFeed').onclick=loadFeed;
+$('#refreshFeed').onclick=()=>loadFeed(true);
 ['#tAuto','#tExp','#tSafe','#tOversight'].forEach(id=>$(id).addEventListener('input',applyTuning));
 $('#tuningReset').onclick=()=>{
   state.tuning=null; syncTuning(); renderProfile();
