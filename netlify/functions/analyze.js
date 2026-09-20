@@ -7,7 +7,7 @@
 // Set GEMINI_API_KEY in the Netlify site environment variables.
 // Endpoint once deployed: https://<your-site>.netlify.app/.netlify/functions/analyze
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.8-flash";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json",
