@@ -46,7 +46,7 @@ export const handler = async () => {
       dateAdded: v.dateAdded,
     }));
 
-    // Full list of every CVE ID in the catalog — used for CVE matching in the app
+    // Full list of every CVE ID in the catalog, used for CVE matching in the app
     // (display stays trimmed, matching uses the whole catalog).
     const allCveIds = vulns.map((v) => v.cveID);
 
